@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class NewTransaction extends StatefulWidget {
   Function addTransactionHandler;
@@ -12,18 +13,42 @@ class NewTransaction extends StatefulWidget {
 class _NewTransactionState extends State<NewTransaction> {
   final titleController = TextEditingController();
   final amountController = TextEditingController();
+  DateTime selectedDate;
 
   void submitData() {
+
+    if(amountController.text.isEmpty){
+      return;
+    }
     final enteredTitle = titleController.text;
     final enteredAmount = double.parse(amountController.text);
 
-    if (enteredTitle.isEmpty || enteredAmount <= 0) {
+    if (enteredTitle.isEmpty || enteredAmount <= 0 || selectedDate == null) {
       return;
     }
 
     widget.addTransactionHandler(
-        titleController.text, double.parse(amountController.text));
+        titleController.text,
+        double.parse(amountController.text),
+        selectedDate
+    );
     Navigator.of(context).pop();
+  }
+
+  void presentDatePicker() {
+    showDatePicker(
+            context: context,
+            initialDate: DateTime.now(),
+            firstDate: DateTime(2019),
+            lastDate: DateTime.now())
+        .then((pickedDate) {
+      if (pickedDate == null) {
+        return;
+      }
+      setState(() {
+        selectedDate = pickedDate;
+      });
+    });
   }
 
   @override
@@ -45,9 +70,30 @@ class _NewTransactionState extends State<NewTransaction> {
             keyboardType: TextInputType.number,
             onSubmitted: (_) => submitData(),
           ),
-          FlatButton(
+          Container(
+            height: 70,
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(selectedDate == null
+                      ? 'No Date Selected'
+                      : 'Picked Date is ${DateFormat.yMMMd().format(selectedDate)}'),
+                ),
+                FlatButton(
+                    onPressed: presentDatePicker,
+                    child: Text(
+                      'Choose date',
+                      style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.bold),
+                    ))
+              ],
+            ),
+          ),
+          RaisedButton(
               onPressed: submitData,
-              textColor: Colors.purple,
+              color: Theme.of(context).primaryColor,
+              textColor: Theme.of(context).textTheme.button.color,
               child: Text('Add Transaction'))
         ],
       ),
